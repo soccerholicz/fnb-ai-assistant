@@ -24,7 +24,9 @@ in subsequent phases (see [Roadmap](#roadmap)).
 | LLM (planned)      | **Anthropic Claude** (tool-calling)       | Best-in-class native tool-calling + streaming, which the agent core depends on. Wired in [JAV-5]. Provider access is isolated behind one module so it stays swappable.                                                                                                                   |
 | Lint / format      | **ESLint 9** (flat config) + **Prettier** | Industry standard. Prettier owns formatting; ESLint owns correctness.                                                                                                                                                                                                                    |
 | Tests              | **Vitest**                                | Unified test runner for both server (Fastify `inject`) and web (jsdom + Testing Library). Fast, Vite-native, zero extra config.                                                                                                                                                          |
-| CI/CD + deploy     | _Deferred to_ [JAV-4]                     | Pipeline and live deploy target are the next foundation task.                                                                                                                                                                                                                            |
+| CI                 | **GitHub Actions**                        | Lint + format + typecheck + test + build on every PR and push to `main`. Free unlimited minutes on a public repo; native pnpm caching.                                                                                                                                                   |
+| Deploy (web)       | **GitHub Pages**                          | The SPA is static — Pages serves it for free via the built-in token, no extra account. This is the live skeleton URL.                                                                                                                                                                    |
+| Deploy (API)       | **Fly.io** (Docker)                       | The API is a long-lived process (streams agent responses in [JAV-5]) so it needs a real Node host, not static hosting. Fly is Docker-based, health-checked, scales to zero. Deploy is gated on a `FLY_API_TOKEN` secret. See [DEPLOYMENT.md](./DEPLOYMENT.md).                           |
 
 > **Why not Next.js?** A coupled full-stack framework would tie the dashboard's deploy to the API
 > and can't host the embeddable widget (which must run as a tiny standalone bundle on customer
@@ -104,7 +106,21 @@ pnpm --filter @jav/web dev     # web only
 | `pnpm build`     | Build all packages (`tsup` for API, `vite build` for web) |
 | `pnpm check`     | lint + format:check + typecheck + test (the full gate)    |
 
-These are the checks Phase 0.2 ([JAV-4]) will enforce in CI.
+These checks run in CI on every PR and push to `main` ([JAV-4]). See
+[Deployment & CI/CD](#deployment--cicd) for the live URLs and deploy steps.
+
+---
+
+## Deployment & CI/CD
+
+- **CI** — GitHub Actions runs the full gate (lint + format + typecheck + test + build) on every
+  PR and push to `main`.
+- **Web** — deployed to **GitHub Pages** on every push to `main`. Live skeleton URL:
+  `https://<owner>.github.io/<repo>/`.
+- **API** — Docker image deployed to **Fly.io** (gated on a `FLY_API_TOKEN` secret).
+
+Full setup, one-time steps, and how to wire the live API URL into the web app are in
+**[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 ---
 
@@ -112,8 +128,8 @@ These are the checks Phase 0.2 ([JAV-4]) will enforce in CI.
 
 **Phase 0 — Foundation**
 
-- **JAV-3** — Stack decision, repo, app skeleton ← _this repo's current state_
-- [JAV-4] — CI/CD pipeline + live deploy target
+- **JAV-3** — Stack decision, repo, app skeleton
+- **JAV-4** — CI/CD pipeline + live deploy target ← _this repo's current state_
 - [JAV-5] — Agent core: LLM integration, tool-calling, conversation state
 - [JAV-6] — Knowledge base ingestion + grounded answers (RAG)
 

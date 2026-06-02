@@ -1,0 +1,74 @@
+name: Deploy Web (GitHub Pages)
+
+# Builds the web SPA and publishes it to GitHub Pages on every push to main.
+# This is the live skeleton URL. No external account or secret required —
+# Pages uses the built-in GITHUB_TOKEN.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permissions required by the Pages deployment actions.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent Pages deployment; let in-flight ones finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web
+        # Project Pages serve under /<repo>/, so the asset base must match.
+        # VITE_API_BASE_URL points the SPA at the deployed API once it is live
+        # (set it as a repo variable; falls back to /api for local dev).
+        run: pnpm --filter @jav/web build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - name: Add SPA 404 fallback
+        # Pages serves 404.html for unknown paths; mirror index.html so deep
+        # links resolve to the SPA once client-side routing lands.
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

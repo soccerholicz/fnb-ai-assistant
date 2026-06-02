@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react';
 const API_TARGET = 'http://localhost:8080';
 
 export default defineConfig({
+  // Asset base path. Defaults to "/" for local dev; the Pages deploy sets
+  // VITE_BASE to "/<repo>/" so built assets resolve under the project site.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react()],
   server: {
     port: 5173,

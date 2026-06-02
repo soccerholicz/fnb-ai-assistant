@@ -1,0 +1,13 @@
+# Keep the build context small and avoid copying host artifacts into layers.
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/*.tsbuildinfo
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

@@ -1,0 +1,50 @@
+name: Deploy API (Fly.io)
+
+# Deploys the Fastify API to Fly.io on pushes to main that touch the API or its
+# build/deploy config. The job is GATED on the FLY_API_TOKEN secret: until a
+# maintainer adds it (see DEPLOYMENT.md), the job no-ops instead of failing, so
+# the live-deploy work can land without blocking CI on a credential.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'fly.toml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy API to Fly.io
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gate on FLY_API_TOKEN
+        id: gate
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -n "$FLY_API_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=API deploy skipped::FLY_API_TOKEN is not set. Add it in repo secrets to enable Fly deploys (see DEPLOYMENT.md)."
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        if: steps.gate.outputs.ready == 'true'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        if: steps.gate.outputs.ready == 'true'
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
