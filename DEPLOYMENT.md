@@ -96,3 +96,5 @@ pnpm check        # the exact gate CI runs (minus build)
 pnpm build        # produce deploy artifacts locally
 pnpm --filter @jav/api start   # run the built API on :8080
 ```
+
+<!-- CI-on-PR smoke test for JAV-4; branch is deleted after verification. -->
