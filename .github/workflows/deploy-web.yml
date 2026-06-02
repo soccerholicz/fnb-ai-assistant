@@ -27,14 +27,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node before pnpm: pnpm 11.x requires Node >= 22.13.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      # Activate pnpm via corepack (bundled with Node 22) using the version
+      # pinned in package.json `packageManager`.
+      - name: Enable corepack (pnpm)
+        run: corepack enable
 
       - name: Resolve pnpm store path
         shell: bash

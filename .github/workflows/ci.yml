@@ -6,6 +6,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 # Cancel superseded runs on the same ref to save minutes.
 concurrency:
@@ -20,15 +21,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node must be set up before pnpm: pnpm 11.x requires Node >= 22.13, and
-      # pnpm/action-setup self-installs using whatever Node is on PATH.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      # Activate pnpm via corepack (bundled with Node 22) using the version
+      # pinned in package.json `packageManager`. Avoids pnpm/action-setup, whose
+      # self-installer runs under the runner's stale Node and fails pnpm's engine
+      # check.
+      - name: Enable corepack (pnpm)
+        run: corepack enable
 
       - name: Resolve pnpm store path
         shell: bash
