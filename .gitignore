@@ -7,6 +7,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Local runtime data (persisted conversation state, etc.)
+.data/
+
 # Test / coverage
 coverage/
 

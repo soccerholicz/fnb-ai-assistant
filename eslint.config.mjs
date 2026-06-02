@@ -16,9 +16,9 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
-  // Node-flavoured code (API server, config files).
+  // Node-flavoured code (API server, shared packages, config files).
   {
-    files: ['apps/api/**/*.{ts,tsx}', '**/*.config.{ts,mts,js,mjs}'],
+    files: ['apps/api/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}', '**/*.config.{ts,mts,js,mjs}'],
     languageOptions: {
       globals: { ...globals.node },
     },
